@@ -45,7 +45,7 @@ router.post('/signup', (req, res) => {
 });
 
 router.post('/signin', (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, followers, following, pic } = req.body;
   if (!email || !password) {
     return res.json({ error: 'Please add email or password.' });
   }
@@ -61,10 +61,10 @@ router.post('/signin', (req, res) => {
             { _id: savedUser._id },
             process.env.JWT_SECRET
           );
-          const { _id, name, email, pic } = savedUser;
+          const { _id, name, email, followers, following, pic } = savedUser;
           res.json({
             token,
-            user: { _id, name, email, pic },
+            user: { _id, name, email,followers, following, pic },
           });
         } else {
           return res.json({ error: 'Invalid email or password.' });
@@ -84,23 +84,22 @@ router.post('/reset-password', (req, res) => {
       if (!user) {
         return res.json({ error: "User don't exists with that email." });
       }
+      
       user.resetToken = token;
-      user.expireToken = Date.now() + 3600000;
-      user
-        .save()
-        .then((result) => {
-          transporter.sendMail({
-            to: result.email,
-            from: 'nta.cntt1997@gmail.com',
-            subject: 'password reset',
-            html: `
+      user.expireToken = Date.now() + 3600000; 
+      user.save().then((result) => {
+        console.log(result);
+        transporter.sendMail({
+          to: result.email,
+          from: 'nta.cntt1997@gmail.com',
+          subject: 'password reset',
+          html: `
           <p>Your requested for password reset</p>
           <h5>Click in this <a href="http://localhost:3000/reset/${token}">link</a> to reset password</h5>
           `,
-          });
-          res.json({ message: 'check your email' });
-        })
-        .catch((err) => console.log(err));
+        });
+        res.json({ message: 'check your email' });
+      });
     });
   });
 });
